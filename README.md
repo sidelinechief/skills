@@ -4,7 +4,7 @@ Claude Code skills from how we build at SidelineSwap. Each skill is a plain fold
 
 | Skill | What it does |
 |-------|--------------|
-| [prototype-harness](skills/prototype-harness/SKILL.md) | Prototype a redesign of an existing page inside your real app, against real production data |
+| [prototype-harness](skills/prototype-harness/SKILL.md) | Prototype a redesigned or new page inside your real app, against real production data |
 
 ## Install
 
@@ -19,9 +19,10 @@ Or copy a skill folder (for example `skills/prototype-harness/`) into your proje
 
 ## prototype-harness
 
-Prototypes a redesign of a page that already exists in your app. The prototype lives at its own
+Prototypes a redesign of an existing page, or a new page built from your app's existing components and
+design system. The prototype lives at its own
 `/prototype/<page>` route, loads real production records, and runs inside your real app, so it uses your
-real components, design system and analytics. It never touches the production page or needs a live
+real components, design system and analytics. It never touches production pages or needs a live
 backend.
 
 Every prototype gets:
@@ -44,6 +45,7 @@ Every prototype gets:
 - One small change to your analytics layer: a debug tap that the prototype subscribes to. It does
   nothing unless a prototype is open. The skill explains how to add it.
 
-Then ask Claude something like "prototype a redesign of the product page". The first prototype takes
+Then ask Claude something like "prototype a redesign of the product page" or "design a new
+seller dashboard". The first prototype takes
 longest, because Claude maps your app (fetch helper, session context, analytics layer, API prefixes,
 design system) and builds the harness. After that, new prototypes copy the first one.

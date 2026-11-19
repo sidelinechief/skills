@@ -1,11 +1,11 @@
 ---
 name: prototype-harness
-description: Build an interactive, in-app redesign prototype that branches off a real production page. Use when asked to prototype, workshop, or mock up a redesign of an existing page (product page, search, checkout, profile, listing flow…), compare design iterations side by side, or preview a page against real production data with toggles for viewer/user type, feature flags, item/entity state, and a desktop↔mobile switch. Produces a self-contained `/prototype/*` route with a control panel, a captured analytics event stream, a stubbed backend, and a decision log for the engineer who builds it — no live services required.
+description: Build an interactive, in-app prototype of a redesigned or new page, running in the real app against real production data. Use when asked to prototype, workshop, or mock up a redesign of an existing page (product page, search, checkout, profile, listing flow…) or a new page or flow built from the app's existing patterns and design system, compare design iterations side by side, or preview a page against real production data with toggles for viewer/user type, feature flags, item/entity state, and a desktop↔mobile switch. Produces a self-contained `/prototype/*` route with a control panel, a captured analytics event stream, a stubbed backend, and a decision log for the engineer who builds it — no live services required.
 ---
 
 # Prototype Harness
 
-A pattern for standing up a throwaway-but-faithful redesign of an existing page **inside the app**, so design decisions can be made against real production data and real analytics without touching production code or needing a live backend.
+A pattern for standing up a throwaway-but-faithful prototype **inside the app**, either a redesign of an existing page or a new page built from the app's existing components and design system, so design decisions can be made against real production data and real analytics without touching production code or needing a live backend.
 
 Written for a React app on the Next.js App Router. The pattern ports to other React setups; adjust the server-component parts.
 
@@ -23,8 +23,9 @@ The examples throughout use a marketplace product page (an *item* with a seller,
 - "Preview this against a real production item / listing / order."
 - "I want to see the seller view vs. the buyer view / logged-out view."
 - "How does this look on mobile vs. desktop?"
+- "Design a new `<page>` page or flow that fits the rest of the app."
 
-If the ask is a production feature change (not an exploratory redesign), this is **not** the right tool — build it in the real page.
+If the ask is a production feature change (not an exploratory redesign or new design), this is **not** the right tool — build it in the real page.
 
 ## Map the app (first prototype only)
 
@@ -54,13 +55,14 @@ The prototype loads a real record from **production** regardless of deploy envir
 - Pin the fetch to the production base URL, not the environment's. See `page.tsx` in building-blocks.
 - Some payloads embed slim sub-records (e.g. an item's embedded `model` omits fields the full model endpoint has). Fetch the full record separately and **merge only non-null fields**, so the richer endpoint can't clobber values the first payload already had. A plain `{...base, ...full}` spread overwrites good values with `null`; this is a recurring footgun.
 - Always ship a hand-built mock (`buildMockItem`) so the prototype renders with zero setup and in tests.
+- **New pages still load real records.** A new page usually shows things that already exist (items, orders, users), so fetch them from production the same way. Mock only what doesn't exist yet (a new field, a new entity type), shaped like what the backend would plausibly return, and list those shapes under Notes for the build in `DECISIONS.md`.
 - Key the client component on the record id (`key={itemId ?? 'mock'}`) so switching records remounts cleanly.
 
 ### 2. Toggles for different views (viewer, state, feature flags)
 
 All view state lives in the client harness (`<Page>Prototype.tsx`) and flows through a left **`ControlPanel`**. Three independent axes:
 
-- **Design iteration** — a `Density`-style union type selects which body renders (`'current'` = built from live components, plus one or more redesign bodies). Adding an iteration = add a union member + a `DENSITIES` entry + a branch in the body selector. Keep the "current" body around as the before/after baseline.
+- **Design iteration** — a `Density`-style union type selects which body renders (`'current'` = built from live components, plus one or more redesign bodies). Adding an iteration = add a union member + a `DENSITIES` entry + a branch in the body selector. Keep the "current" body around as the before/after baseline. A new page has no "current" body; its union is just the design options.
 - **Viewer / user type** — `PrototypeViewer` (e.g. `'logged-out' | 'buyer' | 'owner'`). `MockSessionProvider` supplies a static session for that viewer (logged in/out, record ownership) with no real cookies or tokens. The body branches on ownership to show buyer vs. seller UI.
 - **Feature flags / experiences** — a flat `PrototypeVariants` bag of booleans (on sale, price drop, free shipping, reviews, social proof…), grouped for display via `VARIANT_OPTIONS`. `applyOverrides(base, { state, variants, viewer })` layers them onto the base record so each toggle mutates the record the body sees. Expose entity **state** (available/sold/removed/draft…) the same way.
 
@@ -106,9 +108,14 @@ Keep `app/prototype/<page>/DECISIONS.md` next to the code, and write it **during
 - Log a Locked entry whenever the requester redirects you, using their reason. Log research-driven choices
   as Data-backed without asking. Log your own product-visible choices as Flexible without asking.
 - **Never invent a reason.** Write "No reason recorded" when none was given.
-- **Call out removals.** Anything on today's production page that the prototype drops goes under
+- **Call out removals (redesigns).** Anything on today's production page that the prototype drops goes under
   `## Removed` in the log, with where it went if it moved. New and moved things are easy to spot in the
   prototype; missing things aren't. Build the list by inventorying the production page, not from memory.
+- **New pages: call out entry points.** A new page has nothing to remove, but existing pages change to
+  link into it (a nav item, a button, a banner). List those under `## Entry points`.
+- **Call out new patterns.** Any component or pattern the prototype invents rather than reuses goes under
+  `## New patterns`, so the build adds it to the design system instead of making a one-off. This matters
+  most on a new page.
 - **Before each push**, ask one batched question about significant entries that have no reason recorded
   ("locked, and why, or a starting point?"). Don't block the push on the answer.
 - Leave out harness mechanics and instrumentation details unless they reflect a product decision.
@@ -172,7 +179,7 @@ File-by-file spec with code sketches: **[references/building-blocks.md](referenc
 2. **Scaffold the route** at `app/prototype/<page>/`. If another prototype exists, copy its harness files; `EventStream`, `MockSessionProvider` and `usePrototypeBackend` are usually reusable almost verbatim. Otherwise build them from building-blocks.
 3. **Define the control vocabulary** in the mock module: the entity type, the `Density` union of iterations, the `PrototypeVariants` you want to toggle (+ `VARIANT_OPTIONS` groups), `buildMock<Entity>()`, `variantsFrom<Entity>()`, and `applyOverrides()`.
 4. **Wire production loading** in `page.tsx` for the entity's real endpoint; merge-enrich non-null if the payload embeds slim sub-records; keep the mock fallback.
-5. **Build the "current" body first** from the live components as the baseline, then add redesign bodies. Select between them in the harness by the `Density` value.
+5. **Build the bodies.** For a redesign, build the "current" body first from the live components as the baseline, then add redesign bodies. For a new page, build from the app's existing components and patterns; when nothing fits, make the new component and log it under New patterns. Select between bodies in the harness by the `Density` value.
 6. **Run a copy pass** on every body (see [Copy](#copy-the-ui-explains-itself)): read each line of text on the page and cut it, or change the UI so it isn't needed. Keep only help text that names a consequence the UI can't show. Move any prototype notes to the control panel.
 7. **Confirm all five pillars work**, in a browser: real-id load + mock fallback; viewer/state/variant toggles mutate the page; desktop↔mobile switch; events stream on interaction (desktop and phone) and don't reach real providers; actions stay on the page and fire events.
 8. **Keep `DECISIONS.md` current** as you go (see the decision log above). Before each push, ask the checkpoint question about significant entries that have no reason recorded.

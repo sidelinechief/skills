@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "prototype-harness",
-      "description": "Build an interactive, in-app redesign prototype that branches off a real production page: real data, viewer/state/feature-flag toggles, a desktop-mobile switch, a captured analytics event stream, a stubbed backend, and a decision log for the engineer who builds it",
+      "description": "Build an interactive, in-app prototype of a redesigned or new page, running in the real app: real production data, viewer/state/feature-flag toggles, a desktop-mobile switch, a captured analytics event stream, a stubbed backend, and a decision log for the engineer who builds it",
       "source": "./",
       "strict": false,
       "skills": ["./skills/prototype-harness"]
