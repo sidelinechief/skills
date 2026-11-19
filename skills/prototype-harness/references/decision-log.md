@@ -34,7 +34,7 @@ One bullet per decision, numbered so tickets and reviews can point at it:
 Open questions go in their own section and are numbered `O1`, `O2`…, each ending with what needs
 deciding.
 
-**Removals get their own section.** Anything on today's production page that the prototype drops goes
+**On a redesign, removals get their own section.** Anything on today's production page that the prototype drops goes
 under `## Removed`, numbered `R1`, `R2`…, with the same tag, source and reason as any other entry. A
 builder working from the prototype sees what's new or moved, but nothing points at what's missing, so a
 removal that isn't called out either survives into the build by accident or disappears without anyone
@@ -54,6 +54,18 @@ it as Flexible and raise it at the next checkpoint.
 The same inventory catches the opposite case: things the prototype doesn't show but the build must keep
 (banners, hidden SEO links, feature-flagged variants, gated items). List them under **Not in the
 prototype, but kept**, so their absence from the prototype isn't read as a removal.
+
+**On a new page, entry points replace removals.** There's no production page to compare against, but
+existing pages change to link into the new one: a nav item, a button, a banner, an email link. List each
+under `## Entry points`, numbered `E1`, `E2`…, with the same tag, source and reason as any other entry.
+Find them by asking where people will come from, and check each existing page you'd change on desktop
+and mobile.
+
+**New patterns get their own section.** Any component or pattern the prototype invents rather than
+reuses from the design system goes under `## New patterns`, numbered `P1`, `P2`…, saying what it is and
+why nothing existing fit. Without it, the build copies the prototype's one-off instead of adding the
+component to the design system. On a new page this list is often long; check it as carefully as a
+redesign's Removed list.
 
 Group entries by surface (both devices / desktop / mobile, or by page section). Add a short **Notes for
 the build** section for engineering concerns raised in review that are build scope, not product
@@ -86,7 +98,10 @@ Write entries as the build goes, not at the end:
 4. **When something on today's page is dropped**, log it under Removed straight away, with where it went
    if it moved. Before the first push, run the production-page comparison above to catch removals
    nobody mentioned.
-5. **When a review settles something** (a call with the engineer, PR comments), log it as Locked with the
+5. **When you build a component or pattern the design system doesn't have**, log it under New
+   patterns.
+6. **On a new page, when you add a way into it from an existing page**, log it under Entry points.
+7. **When a review settles something** (a call with the engineer, PR comments), log it as Locked with the
    reviewer and date. When a review raises something and leaves it unsettled, log it under Open.
 
 **Checkpoint question.** Before each push, look at the entries added since the last push. If any are
@@ -117,8 +132,10 @@ carries the detail. Map the tags onto the ticket like this:
 | Open | **Decisions needed**: the question, a recommendation if there is one, and who answers |
 | Removed (`R#`) | **Removed**: every entry, one line each, including Flexible ones. Nothing on today's page disappears silently |
 | Not in the prototype, but kept | **Kept**: one line each, so the build doesn't drop them |
+| Entry points (`E#`) | **Entry points**: every entry, one line each |
+| New patterns (`P#`) | **New patterns**: one line each, so the build adds them to the design system |
 
-Template:
+Template (leave out sections with nothing in them; a new page has no Removed or Kept):
 
 ```markdown
 ## Goal
@@ -140,6 +157,12 @@ Template:
 
 ## Kept
 - <What the prototype doesn't show but the build must keep.>
+
+## Entry points
+- E1. <Existing page that changes to link into the new one, and how.>
+
+## New patterns
+- P1. <Component or pattern the design system doesn't have yet, and why nothing existing fit.>
 
 ## Notes
 Entries tagged Flexible in the decision log are the implementer's call. The prototype's harness
