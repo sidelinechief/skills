@@ -1,0 +1,19 @@
+{
+  "name": "sidelinechief-skills",
+  "owner": {
+    "name": "sidelinechief"
+  },
+  "metadata": {
+    "description": "Claude Code skills from how we build at SidelineSwap",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "prototype-harness",
+      "description": "Build an interactive, in-app redesign prototype that branches off a real production page: real data, viewer/state/feature-flag toggles, a desktop-mobile switch, a captured analytics event stream, a stubbed backend, and a decision log for the engineer who builds it",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/prototype-harness"]
+    }
+  ]
+}
